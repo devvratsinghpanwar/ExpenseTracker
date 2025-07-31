@@ -1,45 +1,36 @@
 const express = require('express');
-const path = require('path');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const mongoose = require('mongoose');
 
 // Load environment variables
 dotenv.config();
 
-// Connect to database
+// Connect to Database
 connectDB();
 
 const app = express();
 
-// Basic middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Middleware
+// Use a simple CORS setup. Vercel handles the environment differences.
+app.use(cors()); 
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: false })); 
 
-// API routes BEFORE static files
+// --- API Routes ---
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
 
-// Health check
+// --- Health & DB Check ---
+// This helps verify that the API is up and the DB is connected.
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    message: 'Server is running', 
-    status: 'OK',
-    timestamp: new Date().toISOString()
-  });
+    res.status(200).json({ 
+        message: 'API is running',
+        dbConnected: mongoose.connection.readyState === 1 // 1 means connected
+    });
 });
 
-// Serve static files (only in production)
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
-  });
-}
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// --- Vercel Export ---
+// This is the only thing that should be exported.
+module.exports = app;
