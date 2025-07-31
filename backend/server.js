@@ -12,7 +12,7 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://expensemanager-teal.vercel.app'] 
+    ? ['https://your-app.vercel.app'] 
     : ['http://localhost:5173', 'http://localhost:4173'],
   credentials: true
 }));
