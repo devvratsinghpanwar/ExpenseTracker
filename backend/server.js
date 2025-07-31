@@ -20,9 +20,11 @@ app.use(express.urlencoded({ extended: false })); // Body parser for URL-encoded
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
 
-// Basic route for testing
-app.get('/', (req, res) => {
-    res.send('Expense Tracker API is running...');
+//serve built frontend
+app.use(express.static(path.resolve(__dirname, '../frontend/dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
 });
 
 const PORT = process.env.PORT || 5000;
