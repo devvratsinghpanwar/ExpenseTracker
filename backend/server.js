@@ -7,65 +7,39 @@ const connectDB = require('./config/db');
 // Load environment variables
 dotenv.config();
 
+// Connect to database
+connectDB();
+
 const app = express();
 
-// Connect to database only if not already connected
-if (process.env.NODE_ENV !== 'production' || !global.mongooseConnection) {
-  connectDB();
-  global.mongooseConnection = true;
-}
+// Basic middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-// Middleware
-// CORS Configuration
-const corsOptions = {
-  origin: [
-      'http://localhost:5173', // Your local React dev server
-      'http://localhost:3000', // Common alternative for local dev
-      'https://expensemanager-teal.vercel.app/' // **IMPORTANT: Add your Vercel URL here later**
-  ],
-  optionsSuccessStatus: 200
-};
+// API routes BEFORE static files
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/expenses', require('./routes/expenseRoutes'));
 
-app.use(cors(corsOptions));
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: false })); 
-
-// Health check endpoint
+// Health check
 app.get('/api/health', (req, res) => {
-  res.json({ message: 'Server is running', status: 'OK' });
-});
-
-// API Routes - wrap in try-catch for better error handling
-try {
-  app.use('/api/users', require('./routes/userRoutes'));
-  app.use('/api/expenses', require('./routes/expenseRoutes'));
-  app.use('/api', require('./routes/testRoutes'));
-} catch (error) {
-  console.error('Error loading routes:', error);
-}
-
-// Serve built frontend
-app.use(express.static(path.resolve(__dirname, '../frontend/dist')));
-
-// Catch-all handler
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
-});
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('Server error:', error);
-  res.status(500).json({ 
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+  res.json({ 
+    message: 'Server is running', 
+    status: 'OK',
+    timestamp: new Date().toISOString()
   });
 });
 
-const PORT = process.env.PORT || 5000;
-
-// For Vercel, export the app
+// Serve static files (only in production)
 if (process.env.NODE_ENV === 'production') {
-  module.exports = app;
-} else {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+  });
 }
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

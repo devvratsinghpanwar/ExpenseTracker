@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const {
-    getExpenses,
-    addExpense,
-    deleteExpense,
-} = require('../controllers/expenseController');
 const { protect } = require('../middleware/authMiddleware');
+const { getExpenses, addExpense, deleteExpense } = require('../controllers/expenseController');
 
-// All these routes are protected
-router.route('/').get(protect, getExpenses).post(protect, addExpense);
-router.route('/:id').delete(protect, deleteExpense);
+// Test route
+router.get('/test', (req, res) => {
+  res.json({ message: 'Expense routes working' });
+});
+
+// Protected routes
+router.get('/', protect, getExpenses);
+router.post('/', protect, addExpense);
+router.delete('/:id', protect, deleteExpense);
 
 module.exports = router;

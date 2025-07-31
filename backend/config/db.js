@@ -1,24 +1,40 @@
 const mongoose = require('mongoose');
 
+let isConnected = false;
+
 const connectDB = async () => {
+    if (isConnected) {
+        console.log('MongoDB already connected');
+        return;
+    }
+
     try {
-        // Check if already connected
-        if (mongoose.connections[0].readyState) {
-            console.log('MongoDB already connected');
-            return;
+        if (!process.env.MONGO_URI) {
+            throw new Error('MONGO_URI environment variable is not set');
         }
 
+        console.log('Connecting to MongoDB...');
+        
         const conn = await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000, // 10 seconds
+            socketTimeoutMS: 45000,
         });
 
+        isConnected = true;
         console.log(`MongoDB Connected: ${conn.connection.host}`);
+        
+        // Handle connection events
+        mongoose.connection.on('disconnected', () => {
+            isConnected = false;
+            console.log('MongoDB disconnected');
+        });
+
+        return conn;
+        
     } catch (error) {
-        console.error(`Error: ${error.message}`);
-        if (process.env.NODE_ENV !== 'production') {
-            process.exit(1);
-        }
+        console.error(`MongoDB connection error: ${error.message}`);
+        isConnected = false;
+        throw error;
     }
 };
 

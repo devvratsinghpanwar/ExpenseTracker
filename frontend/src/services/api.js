@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Dynamic API base URL
+const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000/api' 
+  : '/api';
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -18,8 +21,19 @@ const apiCall = async (endpoint, options = {}) => {
     ...options,
   };
 
+  console.log('Making API call to:', `${API_BASE_URL}${endpoint}`);
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-  const data = await response.json();
+  
+  
+  const text = await response.text();// First 200 chars
+  
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    console.error('JSON parse error:', e);
+    throw new Error('Server returned invalid JSON');
+  }
 
   if (!response.ok) {
     throw new Error(data.message || 'Something went wrong');
