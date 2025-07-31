@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -12,15 +13,15 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Body parser for JSON format
-app.use(express.urlencoded({ extended: false })); // Body parser for URL-encoded data
+app.use(cors()); 
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: false })); 
 
 // API Routes
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
 
-//serve built frontend
+// Serve built frontend
 app.use(express.static(path.resolve(__dirname, '../frontend/dist')));
 
 app.get('*', (req, res) => {
