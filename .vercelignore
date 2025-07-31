@@ -8,3 +8,9 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 *.log
+.git
+.gitignore
+README.md
+backend/.env
+frontend/.env
+AI_DEBUGGING_SUMMARY.txt

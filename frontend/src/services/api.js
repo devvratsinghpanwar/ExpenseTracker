@@ -1,15 +1,25 @@
-// Dynamic API base URL
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5000/api' 
-  : '/api';
-
-// Get auth token from localStorage
-const getAuthToken = () => {
-  const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-  return user.token;
+// Environment-aware API configuration
+const getApiBaseUrl = () => {
+  if (typeof window === 'undefined') return '/api'; // SSR fallback
+  
+  const { hostname, protocol } = window.location;
+  
+  // Development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  
+  // Production - same domain
+  return '/api';
 };
 
-// API call helper
+const API_BASE_URL = getApiBaseUrl();
+
+const getAuthToken = () => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('token');
+};
+
 const apiCall = async (endpoint, options = {}) => {
   const token = getAuthToken();
   
@@ -22,49 +32,58 @@ const apiCall = async (endpoint, options = {}) => {
   };
 
   console.log('Making API call to:', `${API_BASE_URL}${endpoint}`);
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
   
-  
-  const text = await response.text();// First 200 chars
-  
-  let data;
   try {
-    data = JSON.parse(text);
-  } catch (e) {
-    console.error('JSON parse error:', e);
-    throw new Error('Server returned invalid JSON');
-  }
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers.get('content-type'));
+    
+    const text = await response.text();
+    console.log('Raw response:', text.substring(0, 200));
+    
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('JSON parse error:', e);
+      console.error('Response text:', text);
+      throw new Error('Server returned invalid JSON');
+    }
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
-  }
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
 
-  return data;
+    return data;
+  } catch (error) {
+    console.error('API call failed:', error);
+    throw error;
+  }
 };
 
-// Auth API
-export const authAPI = {
-  register: (userData) => apiCall('/users/register', {
+// API functions
+export const register = (userData) => 
+  apiCall('/users/register', {
     method: 'POST',
     body: JSON.stringify(userData),
-  }),
-  
-  login: (credentials) => apiCall('/users/login', {
+  });
+
+export const login = (credentials) => 
+  apiCall('/users/login', {
     method: 'POST',
     body: JSON.stringify(credentials),
-  }),
-};
+  });
 
-// Expenses API
-export const expensesAPI = {
-  getExpenses: () => apiCall('/expenses'),
-  
-  addExpense: (expenseData) => apiCall('/expenses', {
+export const getExpenses = () => apiCall('/expenses');
+
+export const addExpense = (expenseData) => 
+  apiCall('/expenses', {
     method: 'POST',
     body: JSON.stringify(expenseData),
-  }),
-  
-  deleteExpense: (id) => apiCall(`/expenses/${id}`, {
+  });
+
+export const deleteExpense = (id) => 
+  apiCall(`/expenses/${id}`, {
     method: 'DELETE',
-  }),
-};
+  });

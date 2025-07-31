@@ -7,30 +7,56 @@ const mongoose = require('mongoose');
 // Load environment variables
 dotenv.config();
 
-// Connect to Database
-connectDB();
-
 const app = express();
 
 // Middleware
-// Use a simple CORS setup. Vercel handles the environment differences.
-app.use(cors()); 
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: false })); 
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://your-app.vercel.app'] 
+    : ['http://localhost:5173'],
+  credentials: true
+}));
 
-// --- API Routes ---
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Connect to database on each request (serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.status(500).json({ message: 'Database connection failed' });
+  }
+});
+
+// API Routes
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
 
-// --- Health & DB Check ---
-// This helps verify that the API is up and the DB is connected.
+// Health check
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ 
-        message: 'API is running',
-        dbConnected: mongoose.connection.readyState === 1 // 1 means connected
-    });
+  res.json({ 
+    message: 'API is running',
+    dbConnected: mongoose.connection.readyState === 1,
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV
+  });
 });
 
-// --- Vercel Export ---
-// This is the only thing that should be exported.
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
+});
+
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ message: 'API route not found' });
+});
+
 module.exports = app;

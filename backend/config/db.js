@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 let isConnected = false;
 
 const connectDB = async () => {
-    if (isConnected) {
+    if (isConnected && mongoose.connection.readyState === 1) {
         console.log('MongoDB already connected');
-        return;
+        return mongoose.connection;
     }
 
     try {
@@ -15,9 +15,18 @@ const connectDB = async () => {
 
         console.log('Connecting to MongoDB...');
         
+        // Disconnect if there's an existing connection in a bad state
+        if (mongoose.connection.readyState !== 0) {
+            await mongoose.disconnect();
+        }
+        
         const conn = await mongoose.connect(process.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 10000, // 10 seconds
+            serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
+            bufferCommands: false,
+            bufferMaxEntries: 0,
+            maxPoolSize: 10,
+            minPoolSize: 5,
         });
 
         isConnected = true;
@@ -25,8 +34,13 @@ const connectDB = async () => {
         
         // Handle connection events
         mongoose.connection.on('disconnected', () => {
-            isConnected = false;
             console.log('MongoDB disconnected');
+            isConnected = false;
+        });
+
+        mongoose.connection.on('error', (err) => {
+            console.error('MongoDB connection error:', err);
+            isConnected = false;
         });
 
         return conn;
