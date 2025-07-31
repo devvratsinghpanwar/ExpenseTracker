@@ -12,7 +12,9 @@ function App() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
+    const savedToken = localStorage.getItem('token');
+    
+    if (savedUser && savedToken) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
@@ -23,6 +25,7 @@ function App() {
       const userData = await authAPI.login({ email, password });
       setUser(userData);
       localStorage.setItem('currentUser', JSON.stringify(userData));
+      localStorage.setItem('token', userData.token); // Store token separately
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -34,6 +37,7 @@ function App() {
       const userData = await authAPI.register({ name, email, password });
       setUser(userData);
       localStorage.setItem('currentUser', JSON.stringify(userData));
+      localStorage.setItem('token', userData.token); // Store token separately
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -43,6 +47,7 @@ function App() {
   const handleSignOut = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('token'); // Remove token
   };
 
   if (loading) {
@@ -93,5 +98,7 @@ function App() {
 }
 
 export default App;
+
+
 
 

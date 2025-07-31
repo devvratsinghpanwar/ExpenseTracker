@@ -39,7 +39,6 @@ export const ExpenseManager = ({ user, onSignOut }) => {
       setError('');
     } catch (err) {
       setError('Failed to add expense');
-      console.error('Error adding expense:', err);
     }
   };
 
@@ -50,7 +49,6 @@ export const ExpenseManager = ({ user, onSignOut }) => {
       setError('');
     } catch (err) {
       setError('Failed to delete expense');
-      console.error('Error deleting expense:', err);
     }
   };
 
