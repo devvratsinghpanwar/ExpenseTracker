@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-// Create an Axios instance. The baseURL will be '/api' which works
-// perfectly for Vercel and for local development with the Vite proxy.
+// This simple setup works for both production and local development
 const api = axios.create({
-  baseURL: window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,7 +11,6 @@ const api = axios.create({
 // Add a request interceptor to include the token on every API call
 api.interceptors.request.use(
   (config) => {
-    // Get the token from localStorage
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -24,7 +22,7 @@ api.interceptors.request.use(
   }
 );
 
-// Auth API
+// You can keep your existing API function exports
 export const authAPI = {
   login: async (credentials) => {
     const response = await api.post('/users/login', credentials);
@@ -36,7 +34,6 @@ export const authAPI = {
   }
 };
 
-// Expenses API
 export const expensesAPI = {
   getExpenses: async () => {
     const response = await api.get('/expenses');
