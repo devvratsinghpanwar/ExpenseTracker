@@ -9,9 +9,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://expense-tracker-rdue.vercel.app/', 'https://expense-tracker-rdue.vercel.app//api/*'] 
-    : ['http://localhost:5000', 'http://localhost:4173', 'http://localhost:5173', 'http://localhost:3000','https://expense-tracker-rdue.vercel.app/', 'https://expense-tracker-rdue.vercel.app//api/*'],
+  origin:['https://expense-tracker-rdue.vercel.app/', 'https://expense-tracker-rdue.vercel.app//api/*','http://localhost:5000', 'http://localhost:4173', 'http://localhost:5173', 'http://localhost:3000','https://expense-tracker-rdue.vercel.app/', 'https://expense-tracker-rdue.vercel.app/api/*'],
   credentials: true
 }));
 
