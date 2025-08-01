@@ -11,7 +11,7 @@ const app = express();
 app.use(cors({
   origin:['https://expense-tracker-rdue.vercel.app/', 'https://expense-tracker-rdue.vercel.app//api/*','http://localhost:5000', 'http://localhost:4173', 'http://localhost:5173', 'http://localhost:3000','https://expense-tracker-rdue.vercel.app/', 'https://expense-tracker-rdue.vercel.app/api/*'],
   methods: 'GET,POST,PUT,DELETE', // Allowed HTTP methods
-  allowedHeaders: 'Content-Type, Authorization',
+  allowedHeaders: '*',
 }));
 
 app.use(express.json());
