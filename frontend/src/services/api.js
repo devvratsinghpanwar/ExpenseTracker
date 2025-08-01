@@ -1,85 +1,55 @@
-// Environment-aware API configuration
-const getApiBaseUrl = () => {
-  if (typeof window === 'undefined') return '/api'; // SSR fallback
-  
-  const { hostname, protocol } = window.location;
-  
-  // Development - check for both dev and preview ports
-  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('localhost:')) {
-    return 'http://localhost:5000/api';
-  }
-  
-  // Production - same domain
-  return '/api';
-};
+import axios from 'axios';
 
-const API_BASE_URL = getApiBaseUrl();
+// Create an Axios instance. The baseURL will be '/api' which works
+// perfectly for Vercel and for local development with the Vite proxy.
+const api = axios.create({
+  baseURL: window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-const apiCall = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  // Add auth token if available
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+// Add a request interceptor to include the token on every API call
+api.interceptors.request.use(
+  (config) => {
+    // Get the token from localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
-    return await response.json();
-  } catch (error) {
-    throw error;
+// Auth API
+export const authAPI = {
+  login: async (credentials) => {
+    const response = await api.post('/users/login', credentials);
+    return response.data;
+  },
+  register: async (userData) => {
+    const response = await api.post('/users/register', userData);
+    return response.data;
   }
 };
 
-// Auth API functions
-export const authAPI = {
-  register: (userData) => 
-    apiCall('/users/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    }),
-
-  login: (credentials) => 
-    apiCall('/users/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    })
-};
-
-// Expenses API functions
+// Expenses API
 export const expensesAPI = {
-  getExpenses: () => apiCall('/expenses'),
-
-  addExpense: (expenseData) => 
-    apiCall('/expenses', {
-      method: 'POST',
-      body: JSON.stringify(expenseData),
-    }),
-
-  deleteExpense: (id) => 
-    apiCall(`/expenses/${id}`, {
-      method: 'DELETE',
-    })
+  getExpenses: async () => {
+    const response = await api.get('/expenses');
+    return response.data;
+  },
+  addExpense: async (expenseData) => {
+    const response = await api.post('/expenses', expenseData);
+    return response.data;
+  },
+  deleteExpense: async (id) => {
+    const response = await api.delete(`/expenses/${id}`);
+    return response.data;
+  }
 };
 
-// Individual exports for backward compatibility
-export const register = authAPI.register;
-export const login = authAPI.login;
-export const getExpenses = expensesAPI.getExpenses;
-export const addExpense = expensesAPI.addExpense;
-export const deleteExpense = expensesAPI.deleteExpense;
+export default api;
