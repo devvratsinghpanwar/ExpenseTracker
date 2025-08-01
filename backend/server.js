@@ -19,7 +19,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {
+  startServer();
   res.send('backend is online');
+});
+app.get('/devvrat', (req, res) => {
+  res.send('brother this route is working also');
 });
 
 // API Routes
@@ -55,6 +59,7 @@ const startServer = async () => {
     if (process.env.NODE_ENV !== 'production') {
       const PORT = process.env.PORT || 5000;
       app.listen(PORT, () => {
+        res.send(`db is here in start server');
         console.log(`Server running on port ${PORT}`);
       });
     }
