@@ -29,6 +29,5 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// --- Vercel Export ---
 // This is the only thing that needs to be exported for Vercel
 module.exports = app;
