@@ -3,7 +3,7 @@ import axios from 'axios';
 // Create an Axios instance. The baseURL will be '/api' which works
 // perfectly for Vercel and for local development with the Vite proxy.
 const api = axios.create({
-  baseURL: window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api',
+  baseURL: window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://expense-tracker-mauve-nine.vercel.app/api',
   headers: {
     'Content-Type': 'application/json',
   },
