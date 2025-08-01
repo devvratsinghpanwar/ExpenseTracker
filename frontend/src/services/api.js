@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // This simple setup works for both production and local development
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://expense-tracker-mauve-nine.vercel.app/api',
   headers: {
     'Content-Type': 'application/json',
   },
